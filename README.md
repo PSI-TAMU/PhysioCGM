@@ -1,6 +1,6 @@
 # SenSE-T1DM: Multimodal Sensor Data for Blood Glucose Estimation
 
-![SeNSE Thumbnail](https://github.com/user-attachments/assets/a5bd3e49-118c-4b74-b73b-16ca14fef5f6)
+![SeNSE Thumbnail](https://github.com/user-attachments/assets/03450364-244d-462e-8907-fb2ae5f7c765)
 
 ## Overview
 
