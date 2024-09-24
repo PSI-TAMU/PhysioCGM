@@ -13,7 +13,7 @@ def populate_sensor_data(sensor_data, selected_df, columns):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Combine ECG and summary files')
-    parser.add_argument('--subject_id', type=str, help='subject id')
+    parser.add_argument('--subject_id', type=str, help='subject id') # example: c1s01
     parser.add_argument('--data_path', default='./dataset/raw', type=str, help='path to folder containing raw data')
     parser.add_argument('--out_folder', default='./dataset/processed', type=str, help='path to folder to save processed data')
     args = parser.parse_args()
