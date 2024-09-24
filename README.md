@@ -86,6 +86,8 @@ For each processed data, it is saved in a json format that contains multimodal s
     * TEMP: data from temperature sensor (°C)
         * 'Time', 'TEMP'
 
+We have also included a [jupyter notebook](./notebooks/visualize.ipynb) that provides an interactive demo for visualizing the signal. This notebook walks you through key steps in analyzing and processing the data, allowing you to explore and better understand the signal.
+
 ## Citation
 Details to be added soon.
 
