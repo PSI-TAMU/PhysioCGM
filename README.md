@@ -1,5 +1,7 @@
 # SenSE-T1DM: Multimodal Sensor Data for Blood Glucose Estimation
 
+![SeNSE Thumbnail](https://github.com/user-attachments/assets/a5bd3e49-118c-4b74-b73b-16ca14fef5f6)
+
 ## Overview
 
 The SenSE-T1DM dataset is an open-source collection of multi-modal physiological data designed to improve diabetes management and advance non-invasive glucose monitoring techniques. This dataset addresses the shortcomings of existing resources, which often lack comprehensive data from different physiological signals.
