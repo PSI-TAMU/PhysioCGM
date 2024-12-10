@@ -2,13 +2,15 @@ import os
 import json
 import time
 import tqdm
+import yaml
 import torch
 import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch.distributed as dist
-from libs.model import ECG_Inception, PPG_Inception
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from libs.model import ECG_Inception, PPG_Inception, EDA_LSTM
 from torch.utils.data import DataLoader
 from libs.dataloader import SeNSEDataset, BalancedBatchSampler
 ## multi-gpu
@@ -52,17 +54,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--subject', type=str, help="The subject id") # ex: c1s01
     parser.add_argument('-v', '--version', type=int, help="Version of the data") # ex: 1
-    parser.add_argument('--data_type', help="Type of data: ecg or ppg")
+    parser.add_argument('--data_type', help="Type of data: ecg or ppg or eda")
     parser.add_argument('--data_dir', default='./data')
+    parser.add_argument('--config_dir', default="./configs")
     parser.add_argument('--out_dir', default="./results")
     args = parser.parse_args()
 
-    config = {
-        'batch_size': 128,
-        'lr': 5e-4,
-        'epochs': 50,
-        'patience': 10,
-    }
+    with open(f"{args.config_dir}/{args.data_type}.yaml", 'r') as f:
+        config = yaml.safe_load(f)
+    print_and_log(f"Config: {config}")
 
 
     out_dir = os.path.join(args.out_dir, args.data_type, args.subject)
@@ -111,12 +111,16 @@ if __name__ == "__main__":
             model = ECG_Inception(normal_hypo_ratio=train_data.normal_hypo_ratio)
         elif args.data_type == 'ppg':
             model = PPG_Inception(normal_hypo_ratio=train_data.normal_hypo_ratio)
+        elif args.data_type == 'eda':
+            model = EDA_LSTM(normal_hypo_ratio=train_data.normal_hypo_ratio)
         else:
             raise ValueError(f"Unknown data type: {args.data_type}")
         model.to(device)
 
         print_and_log("Model size: {}".format(sum(p.numel() for p in model.parameters() if p.requires_grad)))
         optimizer = torch.optim.SGD(model.parameters(), lr=config['lr'], momentum=0.9, weight_decay=1e-4)
+
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=int(config['patience']*0.7), verbose=True)
 
         # training
         best_loss = 1e9
@@ -138,13 +142,23 @@ if __name__ == "__main__":
             for i, (signal_data, hypo_label, glucose, cgm_idx) in enumerate(train_loader):
                 optimizer.zero_grad()
                 # Forward pass
-                signal_data, hypo_label, glucose = signal_data.float().to(device), hypo_label.float().to(device), glucose.float().to(device)
-                pred_label = model(signal_data)
-
+                if args.data_type == 'eda':
+                    phasic, tonic = signal_data
+                    phasic, tonic, hypo_label, glucose = phasic.float().to(device), tonic.float().to(device), hypo_label.float().to(device), glucose.float().to(device)
+                    pred_label = model(phasic, tonic)
+                    num_data = phasic.shape[0]
+                    if phasic.shape[0] == 1:
+                        pred_label = pred_label.unsqueeze(0)
+                else:
+                    signal_data, hypo_label, glucose = signal_data.float().to(device), hypo_label.float().to(device), glucose.float().to(device)
+                    pred_label = model(signal_data)
+                    num_data = signal_data.shape[0]
+                    if signal_data.shape[0] == 1:
+                        pred_label = pred_label.unsqueeze(0)
                 loss = model.loss(pred_label, hypo_label, weighted=True)
                 loss.backward()
-                optimizer.step()  
-                training_loss += (loss.item() * signal_data.shape[0])
+                optimizer.step()
+                training_loss += (loss.item() * num_data)
 
             
             if ddp:
@@ -158,10 +172,21 @@ if __name__ == "__main__":
             validating_loss = 0
             with torch.no_grad():
                 for signal_data, hypo_label, glucose, cgm_idx in val_loader:
-                    signal_data, hypo_label, glucose = signal_data.float().to(device), hypo_label.float().to(device), glucose.float().to(device)
-                    pred_label = model(signal_data)
+                    if args.data_type == 'eda':
+                        phasic, tonic = signal_data
+                        phasic, tonic, hypo_label, glucose = phasic.float().to(device), tonic.float().to(device), hypo_label.float().to(device), glucose.float().to(device)
+                        pred_label = model(phasic, tonic)
+                        num_data = phasic.shape[0]
+                        if phasic.shape[0] == 1:
+                            pred_label = pred_label.unsqueeze(0)
+                    else:
+                        signal_data, hypo_label, glucose = signal_data.float().to(device), hypo_label.float().to(device), glucose.float().to(device)
+                        pred_label = model(signal_data)
+                        num_data = signal_data.shape[0]
+                        if signal_data.shape[0] == 1:
+                            pred_label = pred_label.unsqueeze(0)
                     loss = model.loss(pred_label, hypo_label, weighted=True)
-                    validating_loss += (loss.item() * signal_data.shape[0])
+                    validating_loss += (loss.item() * num_data)
 
             if ddp:
                 local_val_loss = torch.tensor(validating_loss, device=device)
@@ -181,6 +206,8 @@ if __name__ == "__main__":
                     early_stopping = 0
                 else:
                     early_stopping += 1
+
+                scheduler.step(validating_loss)
 
                 # Save the loss plot
                 training_losses.append(training_loss)
