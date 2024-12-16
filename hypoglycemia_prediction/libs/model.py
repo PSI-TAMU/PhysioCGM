@@ -141,6 +141,8 @@ class EDA_LSTM(nn.Module):
             nn.Sigmoid()
         )
 
+        self._initialize_weights()
+
     def forward(self, x1, x2):
         x = x1 + x2
         x = x.unsqueeze(1)
@@ -153,7 +155,19 @@ class EDA_LSTM(nn.Module):
         x = x.squeeze()
 
         return x
-    
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv1d):
+                nn.init.kaiming_normal_(m.weight)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm1d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.xavier_normal_(m.weight)
+                nn.init.constant_(m.bias, 0)
+
     def loss(self, x, gt, weighted=False):
         assert x.shape == gt.shape
 

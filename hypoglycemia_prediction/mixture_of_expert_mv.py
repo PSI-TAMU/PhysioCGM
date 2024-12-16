@@ -3,12 +3,14 @@ import tqdm
 import json
 import torch
 import argparse
+import numpy as np
 import pandas as pd
 from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
-from libs.helper import load_eer_thresholds
+from libs.helper import load_eer_thresholds, calculate_eer_threshold
 from libs.dataloader import MultiModalDataLoader
 from libs.model import ECG_Inception, PPG_Inception, EDA_LSTM
+
 
 logfile = None
 def print_and_log(*args, **kwargs):
@@ -22,6 +24,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-s', '--subject', type=str, help="The subject id") # ex: c1s01
     parser.add_argument('-v', '--version', type=int, help="Version of the data") # ex: 1
+    parser.add_argument('--mode', default='mv', help="Mode of the model: avgp or mv")
     parser.add_argument('--data_dir', default='./data')
     parser.add_argument('--out_dir', default="./results")
     args = parser.parse_args()
@@ -44,7 +47,7 @@ if __name__ == "__main__":
     else:
         versions = [f"v{args.version}"]
 
-    out_dir = os.path.join(args.out_dir, 'MoE', args.subject)
+    out_dir = os.path.join(args.out_dir, f'MoE_{args.mode}', args.subject)
     os.makedirs(out_dir, exist_ok=True)
     logfile = os.path.join(out_dir, "main.log")
     with open(logfile, 'w') as f:
@@ -103,20 +106,36 @@ if __name__ == "__main__":
                     ppg_output = ppg_output.unsqueeze(0)
                 eda_output = eda_output.unsqueeze(0)
 
-                ecg_output = ecg_output.cpu().numpy().mean()
-                ppg_output = ppg_output.cpu().numpy().mean()
-                eda_output = eda_output.cpu().numpy().mean()
+                ecg_output = ecg_output.cpu().numpy()
+                ppg_output = ppg_output.cpu().numpy()
+                eda_output = eda_output.cpu().numpy()
                 temp_output = temp_data.cpu().numpy().mean()
+                hypo_label = hypo_label.item()
+
+                if args.mode == 'avgp':
+                    ecg_output = ecg_output.mean()
+                    ppg_output = ppg_output.mean()
+                    eda_output = eda_output.mean()
+
+                elif args.mode == 'mv':
+                    binarized_ecg_output = (ecg_output > ecg_eer_threshold)
+                    ecg_output = (binarized_ecg_output.sum(axis=0) > (binarized_ecg_output.shape[0]//2)).astype(int)
+                    binarized_ppg_output = (ppg_output > ppg_eer_threshold)
+                    ppg_output = (binarized_ppg_output.sum(axis=0) > (binarized_ppg_output.shape[0]//2)).astype(int)
+                    binarized_eda_output = (eda_output > eda_eer_threshold)
+                    eda_output = (binarized_eda_output.sum(axis=0) > (binarized_eda_output.shape[0]//2)).astype(int)
+                else:
+                    raise ValueError(f"Invalid mode: {args.mode}")
 
                 train_cgm_df['ecg'].append(ecg_output)
                 train_cgm_df['ppg'].append(ppg_output)
                 train_cgm_df['eda'].append(eda_output)
                 train_cgm_df['temp'].append(temp_output)
-                train_cgm_df['label'].append(hypo_label.item())
-
+                train_cgm_df['label'].append(hypo_label)
         train_cgm_df = pd.DataFrame(train_cgm_df)
 
-        val_df = defaultdict(list) # for majority vote accuracy
+
+        val_df = defaultdict(list)
         val_cgm_df = defaultdict(list)
         with torch.no_grad():
             for ecg_data, ppg_data, eda_data, temp_data, hypo_label, (glucose, CGM_idx) in tqdm.tqdm(val_loader):
@@ -140,6 +159,7 @@ if __name__ == "__main__":
                 ppg_output = ppg_output.cpu().numpy()
                 eda_output = eda_output.cpu().numpy()
                 temp_output = temp_data.cpu().numpy()
+                temp_output = temp_output.mean()
                 hypo_label = hypo_label.item()
 
                 binarized_ecg_output = (ecg_output > ecg_eer_threshold)
@@ -148,16 +168,24 @@ if __name__ == "__main__":
                 binarized_ppg_output = (binarized_ppg_output.sum(axis=0) > (binarized_ppg_output.shape[0]//2)).astype(int)
                 binarized_eda_output = (eda_output > eda_eer_threshold)
                 binarized_eda_output = (binarized_eda_output.sum(axis=0) > (binarized_eda_output.shape[0]//2)).astype(int)
-
+                
+                if args.mode == 'avgp':
+                    ecg_output = ecg_output.mean()
+                    ppg_output = ppg_output.mean()
+                    eda_output = eda_output.mean()
+                elif args.mode == 'mv':
+                    ecg_output = binarized_ecg_output
+                    ppg_output = binarized_ppg_output
+                    eda_output = binarized_eda_output
+                else:
+                    raise ValueError(f"Invalid mode: {args.mode}")
+                
                 val_df['ecg'].append(binarized_ecg_output)
                 val_df['ppg'].append(binarized_ppg_output)
                 val_df['eda'].append(binarized_eda_output)
                 val_df['label'].append(hypo_label)
 
-                ecg_output = ecg_output.mean()
-                ppg_output = ppg_output.mean()
-                eda_output = eda_output.mean()
-                temp_output = temp_output.mean()
+
                 val_cgm_df['ecg'].append(ecg_output)
                 val_cgm_df['ppg'].append(ppg_output)
                 val_cgm_df['eda'].append(eda_output)
@@ -168,7 +196,7 @@ if __name__ == "__main__":
         val_df = pd.DataFrame(val_df)
         val_cgm_df = pd.DataFrame(val_cgm_df)
 
-        # individual sensor model accuracy
+        # individual model accuracy
         ecg_acc = (val_df['ecg'] == val_df['label']).mean()
         ppg_acc = (val_df['ppg'] == val_df['label']).mean()
         eda_acc = (val_df['eda'] == val_df['label']).mean()
@@ -180,7 +208,9 @@ if __name__ == "__main__":
         MoE_model.fit(train_cgm_df[['ecg', 'ppg', 'eda', 'temp']], train_cgm_df['label'])
 
         # Predict on the validation set
-        val_cgm_df['pred'] = MoE_model.predict(val_cgm_df[['ecg', 'ppg', 'eda', 'temp']])
+        val_pred = MoE_model.predict_proba(val_cgm_df[['ecg', 'ppg', 'eda', 'temp']])[:, 1]
+        eer_threshold = calculate_eer_threshold(val_pred, val_cgm_df['label'])
+        val_cgm_df['pred'] = (val_pred > eer_threshold).astype(int)
 
         # Calculate the accuracy
         acc = (val_cgm_df['pred'] == val_cgm_df['label']).mean()

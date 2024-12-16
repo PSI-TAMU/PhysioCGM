@@ -128,7 +128,9 @@ if __name__ == "__main__":
         validating_losses = []
         saved_epoch = 0
         early_stopping = 0
-        for epoch in range(config['epochs']):
+        # for epoch in range(config['epochs']):
+        epoch = 0
+        while True:
             model.train()
             training_loss = 0
             if ddp:
@@ -236,7 +238,9 @@ if __name__ == "__main__":
                 if require_early_stop:
                     print_and_log(f"Early stopping at epoch {epoch}")
                     break
-
+            
+            epoch += 1
+            
         if master_process:
             print_and_log(f"Saving model to {ckpt_path} at epoch {saved_epoch}")
 
