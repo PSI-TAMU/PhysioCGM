@@ -1,4 +1,4 @@
-# SenSE-T1DM: Multimodal Sensor Data for Blood Glucose Estimation
+# PhysioCGM: Multimodal Sensor Data for Blood Glucose Estimation
 
 ![SeNSE Thumbnail](https://github.com/user-attachments/assets/03450364-244d-462e-8907-fb2ae5f7c765)
 
