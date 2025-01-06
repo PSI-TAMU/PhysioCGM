@@ -4,12 +4,12 @@
 
 ## Overview
 
-The SenSE-T1DM dataset is an open-source collection of multi-modal physiological data designed to improve diabetes management and advance non-invasive glucose monitoring techniques. This dataset addresses the shortcomings of existing resources, which often lack comprehensive data from different physiological signals.
+The PhysioCGM dataset is an open-source collection of multi-modal physiological data designed to improve diabetes management and advance non-invasive glucose monitoring techniques. This dataset addresses the shortcomings of existing resources, which often lack comprehensive data from different physiological signals.
 
-<b>Key features of the SenSE-T1DM dataset:</b>
+<b>Key features of the PhysioCGM dataset:</b>
 
 * It includes data from three types of sensors: Electrocardiography (ECG), Photoplethysmography (PPG), and Continuous Glucose Monitors (CGM).
-* The dataset was collected over a period of 17 days from 10 participants diagnosed with Type 1 diabetes.
+* The dataset was collected over 17 days from 10 participants diagnosed with Type 1 diabetes.
 * The data was gathered in real-world settings, allowing for more practical, everyday-use scenarios.
 * It aims to support the development of non-invasive glucose monitoring solutions, reducing the reliance on costly and invasive CGM devices.
 
@@ -20,8 +20,8 @@ For more information, please consult our [paper]().
 ### Installation
 1. Clone the repository
 ```
-git clone https://github.com/Morris88826/SeNSE.git
-cd SeNSE
+git clone https://github.com/PSI-TAMU/PhysioCGM.git
+cd PhysioCGM
 ```
 2. Install dependent packages
 ```
