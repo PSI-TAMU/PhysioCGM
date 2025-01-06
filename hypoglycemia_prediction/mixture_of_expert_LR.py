@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.linear_model import LogisticRegression
 from libs.dataloader import MultiModalDataLoader
 from libs.model import ECG_Inception, PPG_Inception, EDA_LSTM
-from libs.helper import calculate_eer_threshold
+from libs.helper import calculate_eer_threshold, load_eer_thresholds
 
 logfile = None
 def print_and_log(*args, **kwargs):
@@ -18,24 +18,6 @@ def print_and_log(*args, **kwargs):
     if logfile is not None:
         with open(logfile, "a") as f:
             print(*args, **kwargs, file=f)
-
-def load_eer_thresholds(subject, out_dir):
-    ecg_results_path = os.path.join(out_dir, 'ecg', subject, 'results.json')
-    ppg_results_path = os.path.join(out_dir, 'ppg', subject, 'results.json')
-    eda_results_path = os.path.join(out_dir, 'eda', subject, 'results.json')
-
-    with open(ecg_results_path, 'r') as f:
-        ecg_results = json.load(f)
-    with open(ppg_results_path, 'r') as f:
-        ppg_results = json.load(f)
-    with open(eda_results_path, 'r') as f:
-        eda_results = json.load(f)
-    eer_thresholds = {
-        "ecg": ecg_results['eer_thresholds'],
-        "ppg": ppg_results['eer_thresholds'],
-        "eda": eda_results['eer_thresholds']
-    }
-    return eer_thresholds
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -54,7 +36,7 @@ if __name__ == "__main__":
     else:
         versions = [f"v{args.version}"]
 
-    types = ['ECG+PPG+EDA+TEMP', 'ECG+PPG+EDA', 'ECG+PPG', 'PPG+EDA', 'EDA+TEMP']
+    types = ['ECG+PPG+EDA+TEMP', 'ECG+PPG+EDA', 'ECG+PPG', 'PPG+EDA', 'EDA+TEMP', 'ECG', 'PPG', 'EDA']
     out_dir = os.path.join(args.out_dir, 'MoE_{}'.format(args.mode), args.subject)
     os.makedirs(out_dir, exist_ok=True)
     logfile = os.path.join(out_dir, "LR.log")
@@ -70,6 +52,7 @@ if __name__ == "__main__":
     # elif args.mode == 2:
     #     input_data = ['ppg', 'eda']
     
+    eer_thresholds = load_eer_thresholds(args.subject, args.out_dir)
     for i, version in enumerate(versions):
         print_and_log(f"Subject: {args.subject}, Version: {version}")
         
@@ -77,21 +60,25 @@ if __name__ == "__main__":
         train_df = pd.read_csv(os.path.join(MoE_dir, "MoE_train.csv"))
         val_df = pd.read_csv(os.path.join(MoE_dir, "MoE_val.csv"))
 
+
         for type in types:
             _type = type.split('+')
             input_data = [t.lower() for t in _type]
             
-            # Initialize logistic regression model
-            MoE_model = LogisticRegression(class_weight='balanced')
-            # Train the model
-            MoE_model.fit(train_df[input_data], train_df['label'])
+            if len(input_data) == 1:
+                threshold = eer_thresholds[type.lower()][i]
+                val_pred = np.array((val_df[input_data] > threshold).values).flatten().astype(int)
+                acc = (val_pred == val_df['label']).mean()
+            else:
+                # Initialize logistic regression model
+                MoE_model = LogisticRegression(class_weight='balanced')
+                # Train the model
+                MoE_model.fit(train_df[input_data], train_df['label'])
 
-            # Predict on the validation set
-            val_pred = MoE_model.predict(val_df[input_data])
-            val_df['pred'] = val_pred
-
-            # Calculate the accuracy
-            acc = (val_df['pred'] == val_df['label']).mean()
+                # Predict on the validation set
+                val_pred = MoE_model.predict(val_df[input_data])
+                # Calculate the accuracy
+                acc = (val_pred == val_df['label']).mean()
             print_and_log(f"{type} Acc: {acc:.2f}")
         print_and_log("=========================================")
 

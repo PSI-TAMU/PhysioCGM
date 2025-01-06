@@ -179,8 +179,8 @@ class EDA_LSTM(nn.Module):
             return  nn.BCELoss()(x, gt)
 
 if __name__ == "__main__":
-    input_data = torch.randn(32, 1200)
-    model = EDA_LSTM()
-    preds = model(input_data, input_data)
+    input_data = torch.randn(32, 250)
+    model = ECG_Inception()
+    preds = model(input_data)
     print("Number of parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))
     print(preds.shape)
