@@ -31,18 +31,12 @@ pip install -r requirements.txt
 ```
 
 ### Download
-We are utilizing data from the **[TCH: Cohort 1 Data](https://drive.google.com/drive/folders/1-GshKVAiVbbSJseSHj5Zwiacmss1G0g4?usp=drive_link)** and **[TCH: Cohort 2 Data](https://drive.google.com/drive/folders/1XS1EqnIQl70-pcNLR-fJs4h3rytZcEBb?usp=drive_link)** folders, located on the SeNSE TAMU team drive.
+The dataset can be downloaded from the TAMU PSI Lab team drive ([here](https://drive.google.com/drive/folders/1mhMKXQ0gxlSJbl-QSILOjKy6GzHqUGJc?usp=drive_link))
 
-* For access to the ECG data, please contact Professor [Gutierrez-Osuna](mailto:rgutier@cse.tamu.edu) at the PSI Lab, within the Department of Computer Science & Engineering at Texas A&M University.
+* For access to the data, please contact Professor [Gutierrez-Osuna](mailto:rgutier@cse.tamu.edu) at the PSI Lab, within the Department of Computer Science & Engineering at Texas A&M University.
 
-Each of the **TCH: Cohort 1 Data** and **TCH: Cohort 2 Data** folders should contain five subject subfolders (S01-S05). For each subject, download the following folders:
-* zephyr
-* e4
-
-For the CGM data, locate the file in the ***cgm*** folder. The file should be named something like ```Clarity_Export_*.csv```. Download this file and rename it to ```cgm.csv```.
-
-Once downloaded, place all the data into the ```./dataset/raw``` directory as follows:
-- SeNSE
+Once downloaded, place all the data under the ```./dataset``` directory as follows:
+- PhysioCGM
   - dataset
     - raw
       - c1s01
@@ -50,15 +44,23 @@ Once downloaded, place all the data into the ```./dataset/raw``` directory as fo
         - zephyr
         - cgm.csv
       - c1s02
+    - processed
+      - c1s01
+        - 0.pkl
+        - 1.pkl
+        - 2.pkl
+        - ...
+      - c1s02
+        
 
 ### Preprocessing
-After downloading all the data and placed in the file structure mentioned above, please run the following command for data preprocessing.
+After downloading the raw data and placed in the file structure mentioned above, one can run the following command for data preprocessing (if not download the processed folder).
 ```
 python preprocess.py --subject_id <subject_id>
 ```
 This process will combine the multimodal data for each subject, aligning it based on the CGM data segments. The processed data will be saved in the ```./dataset/processed/<subject_id>``` directory, where each file corresponds to a specific CGM segment. 
 
-Please note that the processing time may be significant. Alternatively, you can contact [mtseng@tamu.edu](mailto:rgutier@cse.tamu.edu) to request direct access to the pre-processed data.
+Please note that the processing time may be significant.
 
 ## Data
 For each processed data, it is saved in a json format that contains multimodal signals within a recorded cgm section (a 5-minute window). In detail, it includes:
