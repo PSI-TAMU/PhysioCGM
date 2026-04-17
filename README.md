@@ -14,7 +14,7 @@ The PhysioCGM dataset is an open-source collection of multi-modal physiological 
 * The data was gathered in real-world settings, allowing for more practical, everyday-use scenarios.
 * It aims to support the development of non-invasive glucose monitoring solutions, reducing the reliance on costly and invasive CGM devices.
 
-For more information, please consult our [paper]().
+For more information, please consult our [paper](https://www.nature.com/articles/s41597-025-06090-6).
 
 ## Get Started
 
@@ -92,7 +92,18 @@ For each processed data, it is saved in a json format that contains multimodal s
 We have also included a [jupyter notebook](./notebooks/visualize.ipynb) that provides an interactive demo for visualizing the signal. This notebook walks you through key steps in analyzing and processing the data, allowing you to explore and better understand the signal.
 
 ## Citation
-Details to be added soon.
+```
+  @article{quamer2025multimodal,
+    title={A multimodal physiological dataset for non-invasive blood glucose estimation},
+    author={Quamer, Waris and Tseng, Mu-Ruei and Vyas, Kathan and Dave, Darpit and Villegas, Carolina and McKay, Siripoom and DeSalvo, Daniel J and Erranguntla, Madhav and Cote, Gerard and Gutierrez-Osuna, Ricardo},
+    journal={Scientific Data},
+    volume={12},
+    number={1},
+    pages={1822},
+    year={2025},
+    publisher={Nature Publishing Group UK London}
+  }
+```
 
 
 ## Help
