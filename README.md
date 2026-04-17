@@ -93,16 +93,16 @@ We have also included a [jupyter notebook](./notebooks/visualize.ipynb) that pro
 
 ## Citation
 ```
-  @article{quamer2025multimodal,
-    title={A multimodal physiological dataset for non-invasive blood glucose estimation},
-    author={Quamer, Waris and Tseng, Mu-Ruei and Vyas, Kathan and Dave, Darpit and Villegas, Carolina and McKay, Siripoom and DeSalvo, Daniel J and Erranguntla, Madhav and Cote, Gerard and Gutierrez-Osuna, Ricardo},
-    journal={Scientific Data},
-    volume={12},
-    number={1},
-    pages={1822},
-    year={2025},
-    publisher={Nature Publishing Group UK London}
-  }
+@article{quamer2025multimodal,
+  title={A multimodal physiological dataset for non-invasive blood glucose estimation},
+  author={Quamer, Waris and Tseng, Mu-Ruei and Vyas, Kathan and Dave, Darpit and Villegas, Carolina and McKay, Siripoom and DeSalvo, Daniel J and Erranguntla, Madhav and Cote, Gerard and Gutierrez-Osuna, Ricardo},
+  journal={Scientific Data},
+  volume={12},
+  number={1},
+  pages={1822},
+  year={2025},
+  publisher={Nature Publishing Group UK London}
+}
 ```
 
 
