@@ -32,9 +32,7 @@ pip install -r requirements.txt
 ```
 
 ### Download
-The dataset can be downloaded from the TAMU PSI Lab team drive ([here](https://drive.google.com/drive/folders/1mhMKXQ0gxlSJbl-QSILOjKy6GzHqUGJc?usp=drive_link))
-
-* For access to the data, please contact Professor [Gutierrez-Osuna](mailto:rgutier@cse.tamu.edu) at the PSI Lab, within the Department of Computer Science & Engineering at Texas A&M University.
+The dataset can be downloaded from springernature [figshare](https://springernature.figshare.com/articles/dataset/PhysioCGM_a_multimodal_physiological_dataset_for_non-invasive_blood_glucose_estimation/28136294).
 
 Once downloaded, place all the data under the ```./dataset``` directory as follows:
 - PhysioCGM
