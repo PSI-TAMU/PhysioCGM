@@ -1,9 +1,18 @@
 # PhysioCGM: A Multimodal Physiological Dataset for Non-Invasive Blood Glucose Estimation
 
+<a href="https://www.nature.com/articles/s41597-025-06090-6">
+  <img src="https://img.shields.io/badge/Paper-Nature%20Scientific%20Data-%23B31B1B">
+</a>
+<a href="https://springernature.figshare.com/articles/dataset/PhysioCGM_a_multimodal_physiological_dataset_for_non-invasive_blood_glucose_estimation/28136294">
+  <img src="https://img.shields.io/badge/Dataset-Available-blue">
+</a>
 
-![SeNSE Thumbnail](https://github.com/user-attachments/assets/03450364-244d-462e-8907-fb2ae5f7c765)
+This is the official repository for the paper
+
+"A multimodal physiological dataset for non-invasive blood glucose estimation"
 
 ## Overview
+![SeNSE Thumbnail](https://github.com/user-attachments/assets/03450364-244d-462e-8907-fb2ae5f7c765)
 
 The PhysioCGM dataset is an open-source collection of multi-modal physiological data designed to improve diabetes management and advance non-invasive glucose monitoring techniques. This dataset addresses the shortcomings of existing resources, which often lack comprehensive data from different physiological signals.
 
